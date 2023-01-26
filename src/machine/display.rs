@@ -1,5 +1,5 @@
 use crate::{
-    constants::{SCREEN_HEIGHT, SCREEN_WIDTH, SPRITE_SCALE},
+    constants::{DISPLAY_HEIGHT, DISPLAY_WIDTH, SPRITE_SCALE},
     types::Result,
 };
 use sdl2::{pixels::Color, rect::Rect, render::Canvas, video::Window, Sdl};
@@ -9,14 +9,16 @@ pub struct Display {
 }
 
 impl Display {
-    pub fn init(context: &Sdl) -> Result<Self> {
+    pub fn init(title: &str, width: u32, height: u32, context: &Sdl) -> Result<Self> {
         let video = context.video()?;
         let window = video
-            .window("CHIP-8 Interpreter", 640, 320)
+            .window(title, width, height)
             .position_centered()
+            .allow_highdpi()
+            .vulkan()
             .build()?;
 
-        let mut canvas = window.into_canvas().present_vsync().build()?;
+        let mut canvas = window.into_canvas().build()?;
         canvas.set_draw_color(Color::RGB(0, 0, 0));
         canvas.clear();
         canvas.present();
@@ -26,7 +28,7 @@ impl Display {
 
     pub fn draw(
         &mut self,
-        vram_buffer: &[[u8; SCREEN_WIDTH]; SCREEN_HEIGHT],
+        vram_buffer: &[[u8; DISPLAY_WIDTH]; DISPLAY_HEIGHT],
         framerate: i32,
     ) -> Result<()> {
         self.canvas.present();

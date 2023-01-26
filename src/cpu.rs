@@ -1,4 +1,4 @@
-use crate::constants::*;
+use crate::{constants::*, timer};
 use rand::Rng;
 use std::path::Path;
 
@@ -22,11 +22,11 @@ impl Operation {
 pub struct CpuOutput<'a> {
     pub should_beep: bool,
     pub should_draw: bool,
-    pub vram: &'a [[u8; SCREEN_WIDTH]; SCREEN_HEIGHT],
+    pub vram: &'a [[u8; DISPLAY_WIDTH]; DISPLAY_HEIGHT],
 }
 
 pub struct Cpu {
-    vram: [[u8; SCREEN_WIDTH]; SCREEN_HEIGHT],
+    vram: [[u8; DISPLAY_WIDTH]; DISPLAY_HEIGHT],
     ram: [u8; RAM_SIZE],
     v: [u8; 16],
     i: usize,
@@ -39,12 +39,14 @@ pub struct Cpu {
     keypad_wait_input: usize,
     should_draw: bool,
     should_keypad_wait: bool,
+    last_timer_t: u128,
+    last_instruction_t: u128,
 }
 
 impl Cpu {
     pub fn new() -> Self {
         Cpu {
-            vram: [[0; SCREEN_WIDTH]; SCREEN_HEIGHT],
+            vram: [[0; DISPLAY_WIDTH]; DISPLAY_HEIGHT],
             ram: [0; RAM_SIZE],
             v: [0; 16],
             i: 0,
@@ -57,6 +59,8 @@ impl Cpu {
             keypad_wait_input: 0,
             should_draw: true,
             should_keypad_wait: false,
+            last_timer_t: timer::time_nanos(),
+            last_instruction_t: timer::time_nanos(),
         }
     }
 
@@ -67,9 +71,11 @@ impl Cpu {
         Ok(())
     }
 
-    pub fn process(&mut self, keypad: [bool; 16]) -> CpuOutput {
+    pub fn process(&mut self, keypad: [bool; 16], instruction_time_ns: u128) -> CpuOutput {
         self.keypad = keypad;
         self.should_draw = false;
+
+        let time_ns: u128 = timer::time_nanos();
 
         if self.should_keypad_wait {
             for key in 0..keypad.len() {
@@ -80,16 +86,23 @@ impl Cpu {
                 }
             }
         } else {
-            if self.sound_timer > 0 {
-                self.sound_timer -= 1;
+            if time_ns - self.last_timer_t > 16_666_666 {
+                if self.sound_timer > 0 {
+                    self.sound_timer -= 1;
+                }
+
+                if self.delay_timer > 0 {
+                    self.delay_timer -= 1;
+                }
+
+                self.last_timer_t = time_ns;
             }
 
-            if self.delay_timer > 0 {
-                self.delay_timer -= 1;
+            if time_ns - self.last_instruction_t > instruction_time_ns {
+                let opcode = self.get_opcode();
+                self.exec_opcode(opcode);
+                self.last_instruction_t = time_ns;
             }
-
-            let opcode = self.get_opcode();
-            self.exec_opcode(opcode);
         }
 
         CpuOutput {
@@ -177,7 +190,7 @@ impl Cpu {
         };
 
         match operation {
-            Operation::Noop => {},
+            Operation::Noop => {}
             Operation::Next => self.pc += OPCODE_SIZE,
             Operation::Skip => self.pc += OPCODE_SIZE * 2,
             Operation::Jump(addr) => self.pc = addr,
@@ -188,8 +201,8 @@ impl Cpu {
     ///
     /// Clear the display.
     fn op_00e0(&mut self) -> Operation {
-        for y in 0..SCREEN_HEIGHT {
-            for x in 0..SCREEN_WIDTH {
+        for y in 0..DISPLAY_HEIGHT {
+            for x in 0..DISPLAY_WIDTH {
                 self.vram[y][x] = 0
             }
         }
@@ -415,10 +428,10 @@ impl Cpu {
         self.v[0xF] = 0;
 
         for byte in 0..n {
-            let y = (self.v[y] as usize + byte) % SCREEN_HEIGHT;
+            let y = (self.v[y] as usize + byte) % DISPLAY_HEIGHT;
 
             for bit in 0..8 {
-                let x = (self.v[x] as usize + bit) % SCREEN_WIDTH;
+                let x = (self.v[x] as usize + bit) % DISPLAY_WIDTH;
                 let color = (self.ram[self.i + byte] >> (7 - bit)) & 1;
                 self.v[0xF] |= color & self.vram[y][x];
                 self.vram[y][x] ^= color;

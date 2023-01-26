@@ -1,13 +1,14 @@
-extern crate sdl2;
 extern crate rand;
+extern crate sdl2;
 
 use machine::Machine;
-use types::Result;
 use std::path::Path;
+use types::Result;
 
 mod constants;
 mod cpu;
 mod machine;
+mod timer;
 mod types;
 
 fn main() -> Result<()> {

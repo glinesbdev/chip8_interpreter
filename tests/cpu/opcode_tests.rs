@@ -1,6 +1,6 @@
 use super::*;
 use crate::cpu::opcode_tests::opcode_helper::OpcodeHelper;
-use all_asserts::{assert_false, assert_true, assert_lt};
+use all_asserts::{assert_false, assert_true};
 
 #[path = "../helpers/opcode_helper.rs"]
 mod opcode_helper;
@@ -420,7 +420,7 @@ fn draw() {
 
     let mut pixels: Vec<u8> = vec![];
 
-    for y in 0..SCREEN_HEIGHT {
+    for y in 0..DISPLAY_HEIGHT {
         pixels.append(
             &mut helper.cpu.vram[y]
                 .into_iter()
@@ -486,11 +486,12 @@ fn read_delay_timer() {
     // LD Vx, byte
     helper.load_byte(3, 0xB);
     helper.set_delay_timer(3);
+    helper.process_pc();
     helper.assert_dt_value(0xB);
 
     // LD Vx, DT
     helper.read_delay_timer(5);
-    assert_lt!(helper.cpu.delay_timer, 0xB);
+    helper.assert_dt_value(0xB);
 }
 
 #[test]
