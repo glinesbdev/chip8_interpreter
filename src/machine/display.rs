@@ -26,15 +26,8 @@ impl Display {
         Ok(Self { canvas })
     }
 
-    pub fn draw(
-        &mut self,
-        vram_buffer: &[[u8; DISPLAY_WIDTH]; DISPLAY_HEIGHT],
-        framerate: i32,
-    ) -> Result<()> {
+    pub fn draw(&mut self, vram_buffer: &[[u8; DISPLAY_WIDTH]; DISPLAY_HEIGHT]) -> Result<()> {
         self.canvas.present();
-        self.canvas
-            .window_mut()
-            .set_title(&format!("CHIP-8 Interpreter - FPS: {}", framerate))?;
 
         for (y, row) in vram_buffer.iter().enumerate() {
             for (x, &color) in row.iter().enumerate() {

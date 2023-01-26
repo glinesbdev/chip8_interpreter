@@ -1,6 +1,5 @@
 use self::{audio::Audio, display::Display, keyboard::Keyboard};
 use crate::{constants::INSTRUCTIONS_PER_SECOND, cpu::Cpu, types::Result};
-use sdl2::gfx::framerate::FPSManager;
 use std::path::Path;
 
 mod audio;
@@ -11,9 +10,6 @@ pub struct Machine;
 
 impl Machine {
     pub fn start(rom: &Path) -> Result<()> {
-        let mut fps = FPSManager::new();
-        fps.set_framerate(60)?;
-
         let context = sdl2::init()?;
         let mut keyboard = Keyboard::init(&context)?;
         let mut display = Display::init("CHIP-8 Interpreter", 640, 320, &context)?;
@@ -30,7 +26,7 @@ impl Machine {
             let output = cpu.process(keypad, instruction_time_ns);
 
             if output.should_draw {
-                display.draw(&output.vram, fps.get_framerate())?;
+                display.draw(&output.vram)?;
             }
 
             if output.should_beep {
