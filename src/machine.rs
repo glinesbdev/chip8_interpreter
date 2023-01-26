@@ -1,6 +1,6 @@
-use self::{display::Display, keyboard::Keyboard};
+use self::{display::Display, keyboard::Keyboard, audio::Audio};
 use crate::{cpu::Cpu, types::Result};
-use sdl2::{gfx::framerate::FPSManager};
+use sdl2::gfx::framerate::FPSManager;
 use std::path::Path;
 
 mod audio;
@@ -17,6 +17,7 @@ impl Machine {
         let context = sdl2::init()?;
         let mut keyboard = Keyboard::init(&context)?;
         let mut display = Display::init(&context)?;
+        let audio = Audio::init(&context)?;
         let mut cpu = Cpu::new();
 
         cpu.init(&rom)?;
@@ -30,7 +31,9 @@ impl Machine {
             }
 
             if output.should_beep {
-                println!("BEEP!");
+                audio.play();
+            } else {
+                audio.pause();
             }
         }
 
