@@ -1,3 +1,6 @@
+extern crate sdl2;
+extern crate rand;
+
 use machine::Machine;
 use types::Result;
 use std::path::Path;

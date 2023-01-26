@@ -8,7 +8,7 @@ authors = ["Bradyn Glines <glinesbdev@gmail.com>"]
 
 [dependencies]
 rand = "0.8.5"
-sdl2 = { version = "0.35.2", features = ["gfx"] }
+sdl2 = { version = "0.35.2", features = ["bundled", "gfx"] }
 
 [dev-dependencies]
 all_asserts = "2.3.1"

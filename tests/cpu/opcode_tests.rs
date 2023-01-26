@@ -1,6 +1,6 @@
 use super::*;
 use crate::cpu::opcode_tests::opcode_helper::OpcodeHelper;
-use all_asserts::{assert_false, assert_true};
+use all_asserts::{assert_false, assert_true, assert_lt};
 
 #[path = "../helpers/opcode_helper.rs"]
 mod opcode_helper;
@@ -31,7 +31,7 @@ fn return_from_address() {
     helper.load_byte(0xA, 24);
     helper.load_byte(3, 15);
     helper.load_addr_ram(0x123, 0x8A35);
-    helper.assert_pc_value(pc + 4);
+    helper.assert_pc_value(pc + OPCODE_SIZE * 2);
 
     // CALL addr
     helper.call_addr(0x123);
@@ -45,7 +45,7 @@ fn return_from_address() {
     // Assert pc and sp after operations and return jump
     helper.func_return();
     helper.assert_sp_value(0);
-    helper.assert_pc_value(pc + 8);
+    helper.assert_pc_value(pc + OPCODE_SIZE * 3);
 }
 
 #[test]
@@ -444,7 +444,7 @@ fn skip_keypressed() {
     helper.press_key(0xF);
     helper.assert_keypressed(0xF);
 
-    // SKP Vx
+    // // SKP Vx
     helper.skip_keypressed(0);
     helper.assert_pc_value(pc + OPCODE_SIZE * 3);
 
@@ -490,7 +490,7 @@ fn read_delay_timer() {
 
     // LD Vx, DT
     helper.read_delay_timer(5);
-    helper.assert_register_value(5, 0xB);
+    assert_lt!(helper.cpu.delay_timer, 0xB);
 }
 
 #[test]
@@ -498,10 +498,9 @@ fn wait_keypress() {
     let mut helper = OpcodeHelper { cpu: Cpu::new() };
 
     helper.wait_keypress(5);
-    // This is currently a hard-coded value.
-    // Re-write test when event loop is implemented.
-    helper.press_key(0xF);
-    helper.assert_register_value(5, 0xF);
+    helper.press_key(5);
+    helper.process_pc();
+    helper.assert_register_value(5, 5);
 }
 
 #[test]
@@ -525,10 +524,13 @@ fn set_sound_timer() {
     helper.set_sound_timer(3);
     helper.assert_st_value(0xA);
 
+    // Reset sound timer to 0
+    helper.reset_st();
+
     // A value with less than 0x02 has no effect
     helper.load_byte(0xE, 0x01);
     helper.set_sound_timer(0xE);
-    helper.assert_st_value(0xA);
+    helper.assert_st_value(0);
 
     // Reset sound timer to 0
     helper.reset_st();

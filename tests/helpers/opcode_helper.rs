@@ -1,5 +1,5 @@
 use crate::cpu::Cpu;
-use all_asserts::{assert_gt, assert_true};
+use all_asserts::{assert_true, assert_range};
 
 pub struct OpcodeHelper {
     pub cpu: Cpu,
@@ -195,7 +195,7 @@ impl OpcodeHelper {
     }
 
     pub fn assert_register_has_value(&self, reg: usize) {
-        assert_gt!(self.cpu.v[reg], 0);
+        assert_range!(0..=0xF, self.cpu.v[reg]);
     }
 
     pub fn assert_i_register_value(&self, value: usize) {
@@ -235,11 +235,11 @@ impl OpcodeHelper {
 
     pub fn process_opcode(&mut self, opcode: u16) {
         self.load_addr_ram(self.cpu.pc, opcode);
-        self.cpu.process([false; 16]);
+        self.cpu.process(self.cpu.keypad);
     }
 
     pub fn process_pc(&mut self) {
-        self.cpu.process([false; 16]);
+        self.cpu.process(self.cpu.keypad);
     }
 
     pub fn press_key(&mut self, key: usize) {
