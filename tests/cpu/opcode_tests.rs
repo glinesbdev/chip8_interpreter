@@ -420,7 +420,7 @@ fn draw() {
 
     let mut pixels: Vec<u8> = vec![];
 
-    for y in 0..DISPLAY_HEIGHT {
+    for y in 0..VRAM_HEIGHT {
         pixels.append(
             &mut helper.cpu.vram[y]
                 .into_iter()

@@ -1,22 +1,18 @@
-extern crate rand;
-extern crate sdl2;
-
 use machine::Machine;
-use std::path::Path;
 use types::Result;
+use utils::Utils;
 
 mod constants;
 mod cpu;
 mod machine;
+mod rom;
 mod timer;
 mod types;
+mod utils;
 
 fn main() -> Result<()> {
-    let args: Vec<String> = std::env::args().collect();
-    let filepath = args.get(1).ok_or_else(|| "Couldn't load rom at filepath")?;
-    let filepath = Path::new(filepath);
-
-    Machine::start(filepath)?;
+    let loaded_rom = Utils::load_rom_direct()?;
+    Machine::prepare(loaded_rom)?;
 
     Ok(())
 }

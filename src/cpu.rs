@@ -22,11 +22,11 @@ impl Operation {
 pub struct CpuOutput<'a> {
     pub should_beep: bool,
     pub should_draw: bool,
-    pub vram: &'a [[u8; DISPLAY_WIDTH]; DISPLAY_HEIGHT],
+    pub vram: &'a [[u8; VRAM_WIDTH]; VRAM_HEIGHT],
 }
 
 pub struct Cpu {
-    vram: [[u8; DISPLAY_WIDTH]; DISPLAY_HEIGHT],
+    vram: [[u8; VRAM_WIDTH]; VRAM_HEIGHT],
     ram: [u8; RAM_SIZE],
     v: [u8; 16],
     i: usize,
@@ -46,7 +46,7 @@ pub struct Cpu {
 impl Cpu {
     pub fn new() -> Self {
         Cpu {
-            vram: [[0; DISPLAY_WIDTH]; DISPLAY_HEIGHT],
+            vram: [[0; VRAM_WIDTH]; VRAM_HEIGHT],
             ram: [0; RAM_SIZE],
             v: [0; 16],
             i: 0,
@@ -78,10 +78,10 @@ impl Cpu {
         let time_ns: u128 = timer::time_nanos();
 
         if self.should_keypad_wait {
-            for key in 0..keypad.len() {
-                if keypad[key] {
+            for (index, _key) in keypad.iter().enumerate() {
+                if keypad[index] {
                     self.should_keypad_wait = false;
-                    self.v[self.keypad_wait_input] = key as u8;
+                    self.v[self.keypad_wait_input] = index as u8;
                     break;
                 }
             }
@@ -124,25 +124,17 @@ impl Cpu {
         let rom = std::fs::read(filepath)?;
         let rom_end = self.pc + rom.len();
 
-        if (self.pc + rom_end) > MAX_ROM_MEMORY {
-            return Err(format!(
-                "ROM filesize too big! Cannot be bigger than {} bytes!",
-                MAX_ROM_MEMORY
-            )
-            .into());
-        }
-
-        self.ram[self.pc..rom_end].copy_from_slice(&rom.as_slice());
+        self.ram[self.pc..rom_end].copy_from_slice(&rom);
 
         Ok(())
     }
 
     fn exec_opcode(&mut self, opcode: u16) {
         let nibbles = (
-            (opcode & 0xF000) >> 12 as u8,
-            (opcode & 0x0F00) >> 8 as u8,
-            (opcode & 0x00F0) >> 4 as u8,
-            (opcode & 0x000F) as u8,
+            (opcode & 0xF000) >> 12,
+            (opcode & 0x0F00) >> 8,
+            (opcode & 0x00F0) >> 4,
+            (opcode & 0x000F),
         );
 
         let nnn = (opcode & 0x0FFF) as usize;
@@ -201,8 +193,8 @@ impl Cpu {
     ///
     /// Clear the display.
     fn op_00e0(&mut self) -> Operation {
-        for y in 0..DISPLAY_HEIGHT {
-            for x in 0..DISPLAY_WIDTH {
+        for y in 0..VRAM_HEIGHT {
+            for x in 0..VRAM_WIDTH {
                 self.vram[y][x] = 0
             }
         }
@@ -267,7 +259,7 @@ impl Cpu {
     /// Set Vx = kk.
     /// The interpreter puts the value kk into register Vx.
     fn op_6xkk(&mut self, x: usize, kk: u8) -> Operation {
-        self.v[x] = kk as u8;
+        self.v[x] = kk;
         Operation::Next
     }
 
@@ -376,7 +368,7 @@ impl Cpu {
     /// Set Vx = Vx SHL 1.
     /// If the most-significant bit of Vx is 1, then VF is set to 1, otherwise to 0. Then Vx is multiplied by 2.
     fn op_8x0e(&mut self, x: usize) -> Operation {
-        self.v[0xF] = (self.v[x] & 0xFF) >> 7;
+        self.v[0xF] = self.v[x] >> 7;
         self.v[x] <<= 1;
         Operation::Next
     }
@@ -428,10 +420,10 @@ impl Cpu {
         self.v[0xF] = 0;
 
         for byte in 0..n {
-            let y = (self.v[y] as usize + byte) % DISPLAY_HEIGHT;
+            let y = (self.v[y] as usize + byte) % VRAM_HEIGHT;
 
             for bit in 0..8 {
-                let x = (self.v[x] as usize + bit) % DISPLAY_WIDTH;
+                let x = (self.v[x] as usize + bit) % VRAM_WIDTH;
                 let color = (self.ram[self.i + byte] >> (7 - bit)) & 1;
                 self.v[0xF] |= color & self.vram[y][x];
                 self.vram[y][x] ^= color;

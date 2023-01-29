@@ -1,11 +1,17 @@
 pub const RAM_SIZE: usize = 4096;
-pub const MAX_ROM_MEMORY: usize = 0xC8F;
 pub const OPCODE_SIZE: usize = 2;
 pub const INSTRUCTIONS_PER_SECOND: u128 = 1000;
 
-pub const DISPLAY_WIDTH: usize = 64;
-pub const DISPLAY_HEIGHT: usize = 48;
+pub const VRAM_WIDTH: usize = 64;
+pub const VRAM_HEIGHT: usize = 32;
 pub const SPRITE_SCALE: u32 = 10;
+
+pub const DISPLAY_WIDTH: u32 = 640;
+pub const DISPLAY_HEIGHT: u32 = 320;
+
+pub const CHIP8_ARCHIVE_RAW_URL: &str =
+    "https://raw.githubusercontent.com/JohnEarnest/chip8Archive";
+pub const CHIP8_ARCHIVE_URL: &str = "https://github.com/JohnEarnest/chip8Archive";
 
 pub const FONT: [u8; 80] = [
     0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
