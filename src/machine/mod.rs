@@ -51,6 +51,7 @@ impl Machine {
 
         let mut bg_color = Rgb::from(75.0, 75.0, 75.0);
         let mut fg_color = Rgb::from(0.0, 0.0, 0.0);
+        let mut tickrate = Utils::instruction_time_ns();
 
         let rom = Utils::find_rom(filename.to_str().unwrap())?;
 
@@ -66,13 +67,17 @@ impl Machine {
             }
         }
 
-        let mut canvas = window.into_canvas().present_vsync().build()?;
+        if rom.options.tickrate > 0 {
+            tickrate = rom.options.tickrate;
+        }
+
+        let mut canvas = window.into_canvas().build()?;
         canvas.set_draw_color(Color::RGB(0, 0, 0));
         canvas.clear();
         canvas.present();
 
         while let Ok(result) = Keyboard::poll(&mut event_pump) {
-            let output = cpu.process(result, Utils::instruction_time_ns());
+            let output = cpu.process(result, tickrate);
 
             if output.should_draw {
                 Display::draw_game(&mut canvas, output.vram, bg_color, fg_color)?;

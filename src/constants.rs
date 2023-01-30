@@ -1,6 +1,6 @@
 pub const RAM_SIZE: usize = 4096;
 pub const OPCODE_SIZE: usize = 2;
-pub const INSTRUCTIONS_PER_SECOND: u128 = 1000;
+pub const INSTRUCTIONS_PER_SECOND: u128 = 3000;
 
 pub const VRAM_WIDTH: usize = 64;
 pub const VRAM_HEIGHT: usize = 32;

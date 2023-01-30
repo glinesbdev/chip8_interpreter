@@ -3,16 +3,16 @@ use serde_json::{Map, Value};
 
 #[derive(Debug, Eq, Ord, PartialEq, PartialOrd, Serialize, Deserialize, Clone)]
 pub struct RomOptions {
-    pub tickrate: u8,
+    pub tickrate: u128,
     pub fill_color: Option<String>,
     pub background_color: Option<String>,
 }
 
 impl RomOptions {
-    fn parse_tickrate(value: &Value) -> u8 {
+    fn parse_tickrate(value: &Value) -> u128 {
         let value = value.to_string();
 
-        if let Ok(value) = value.parse::<u8>() {
+        if let Ok(value) = value.parse::<u128>() {
             return value;
         }
 
