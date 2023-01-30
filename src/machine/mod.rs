@@ -48,12 +48,11 @@ impl Machine {
         let audio = Audio::init(&self.sdl_context)?;
         let filename = rom.with_extension("");
         let filename = filename.file_name().unwrap();
+        let rom = Utils::find_rom(filename.to_str().unwrap())?;
 
         let mut bg_color = Rgb::from(75.0, 75.0, 75.0);
         let mut fg_color = Rgb::from(0.0, 0.0, 0.0);
         let mut tickrate = Utils::instruction_time_ns();
-
-        let rom = Utils::find_rom(filename.to_str().unwrap())?;
 
         if let Some(background_color) = rom.options.background_color {
             if let Ok(bg_result) = Rgb::from_hex_str(&unescape(&background_color)?) {

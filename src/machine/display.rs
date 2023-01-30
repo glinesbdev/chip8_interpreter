@@ -181,8 +181,6 @@ impl Display {
         bg_color: Rgb,
         fg_color: Rgb,
     ) -> Result<()> {
-        canvas.present();
-
         for (y, row) in vram_buffer.iter().enumerate() {
             for (x, &color) in row.iter().enumerate() {
                 let color = if color == 0 {

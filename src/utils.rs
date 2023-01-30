@@ -1,5 +1,5 @@
 use crate::{
-    constants::{CHIP8_ARCHIVE_RAW_URL, CHIP8_ARCHIVE_URL, INSTRUCTIONS_PER_SECOND},
+    constants::{CHIP8_ARCHIVE_RAW_URL, CHIP8_ARCHIVE_URL, TICKRATE},
     rom::Rom,
     types::Result,
 };
@@ -120,6 +120,6 @@ impl Utils {
     }
 
     pub fn instruction_time_ns() -> u128 {
-        1e9 as u128 / INSTRUCTIONS_PER_SECOND
+        1e9 as u128 / TICKRATE
     }
 }

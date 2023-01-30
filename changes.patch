@@ -1,0 +1,73 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index a418dfb..aedf6d3 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -3,6 +3,7 @@ name = "chip8_interpreter"
+ version = "0.1.0"
+ edition = "2021"
+ authors = ["Bradyn Glines <glinesbdev@gmail.com>"]
++build = "build.rs"
+diff --git a/build.rs b/build.rs
+new file mode 100644
+index 0000000..6176bce
+--- /dev/null
++++ b/build.rs
+@@ -0,0 +1,4 @@
++fn main() {
++    #[cfg(target_os = "macos")]
++    println!("cargo:rustc-link-arg=-Wl,-rpath,@loader_path");
++}
+diff --git a/src/constants.rs b/src/constants.rs
+index ce31e2d..f1768d1 100644
+--- a/src/constants.rs
++++ b/src/constants.rs
+@@ -1,11 +1,17 @@
+ pub const RAM_SIZE: usize = 4096;
+ pub const OPCODE_SIZE: usize = 2;
+-pub const INSTRUCTIONS_PER_SECOND: u128 = 3000;
++pub const INSTRUCTIONS_PER_SECOND: u128 = 1000;
+ pub const VRAM_WIDTH: usize = 64;
+ pub const VRAM_HEIGHT: usize = 32;
++
++#[cfg(target_os = "windows")]
++#[cfg(target_os = "linux")]
+ pub const SPRITE_SCALE: u32 = 10;
+
++#[cfg(target_os = "macos")]
++pub const SPRITE_SCALE: u32 = 20;
++
+ pub const DISPLAY_WIDTH: u32 = 640;
+ pub const DISPLAY_HEIGHT: u32 = 320;
+
+diff --git a/src/machine/display.rs b/src/machine/display.rs
+index 81d38a6..d971f3f 100644
+--- a/src/machine/display.rs
++++ b/src/machine/display.rs
+@@ -181,8 +181,6 @@ impl Display {
+         bg_color: Rgb,
+         fg_color: Rgb,
+     ) -> Result<()> {
+-        canvas.present();
+-
+         for (y, row) in vram_buffer.iter().enumerate() {
+             for (x, &color) in row.iter().enumerate() {
+                 let color = if color == 0 {
+diff --git a/src/machine/mod.rs b/src/machine/mod.rs
+index b6dc5b0..b190625 100644
+--- a/src/machine/mod.rs
++++ b/src/machine/mod.rs
+@@ -48,13 +48,12 @@ impl Machine {
+         let audio = Audio::init(&self.sdl_context)?;
+         let filename = rom.with_extension("");
+         let filename = filename.file_name().unwrap();
++        let rom = Utils::find_rom(filename.to_str().unwrap())?;
+
+         let mut bg_color = Rgb::from(75.0, 75.0, 75.0);
+         let mut fg_color = Rgb::from(0.0, 0.0, 0.0);
+         let mut tickrate = Utils::instruction_time_ns();
+
+-        let rom = Utils::find_rom(filename.to_str().unwrap())?;
+-
+         if let Some(background_color) = rom.options.background_color {
+             if let Ok(bg_result) = Rgb::from_hex_str(&unescape(&background_color)?) {
+                 bg_color = bg_result;
