@@ -8,7 +8,6 @@ use std::{
     collections::HashMap,
     io::{Cursor, Error, Read},
     path::PathBuf,
-    str::FromStr,
 };
 
 pub struct Utils;
@@ -47,16 +46,6 @@ impl Utils {
         }
 
         Ok(())
-    }
-
-    pub fn load_rom_direct() -> Result<Option<PathBuf>> {
-        let args: Vec<String> = std::env::args().collect();
-
-        if let Some(filename) = args.get(1) {
-            return Ok(Some(PathBuf::from_str(filename)?));
-        }
-
-        Ok(None)
     }
 
     pub fn fetch_rom_list() -> Result<Vec<Rom>> {

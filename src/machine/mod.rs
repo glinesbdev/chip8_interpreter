@@ -1,16 +1,10 @@
 use self::{audio::Audio, display::Display, keyboard::Keyboard};
-use crate::{
-    constants::{DISPLAY_HEIGHT, DISPLAY_WIDTH},
-    cpu::Cpu,
-    rom::Rom,
-    types::Result,
-    utils::Utils,
-};
+use crate::{cpu::Cpu, rom::Rom, types::Result, utils::Utils};
 use colors_transform::Rgb;
 use imgui::Context;
 use sdl2::{pixels::Color, video::Window, EventPump, Sdl};
 use snailquote::unescape;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 mod audio;
 mod display;
@@ -22,15 +16,11 @@ pub struct Machine {
 }
 
 impl Machine {
-    pub fn prepare(loaded_rom: Option<PathBuf>) -> Result<()> {
-        if let Some(rom_path) = loaded_rom {
-            Machine::init()?.debug_load_rom(rom_path.as_path())?;
-        } else {
-            let mut roms = Utils::fetch_rom_list()?;
-            roms.sort_by(|a, b| a.title.cmp(&b.title));
+    pub fn prepare() -> Result<()> {
+        let mut roms = Utils::fetch_rom_list()?;
+        roms.sort_by(|a, b| a.title.cmp(&b.title));
 
-            Self::init()?.boot(roms)?;
-        }
+        Self::init()?.boot(roms)?;
 
         Ok(())
     }
@@ -46,18 +36,12 @@ impl Machine {
         let (window, event_pump, rom_path) =
             Display::splash_screen(&self.sdl_context, &mut self.imgui_context, roms)?;
 
-        self.start(window, event_pump, rom_path.as_path(), false)?;
+        self.start(window, event_pump, rom_path.as_path())?;
 
         Ok(())
     }
 
-    pub fn start(
-        &mut self,
-        window: Window,
-        mut event_pump: EventPump,
-        rom: &Path,
-        debug: bool,
-    ) -> Result<()> {
+    pub fn start(&mut self, window: Window, mut event_pump: EventPump, rom: &Path) -> Result<()> {
         let mut cpu = Cpu::new();
         cpu.init(rom)?;
 
@@ -68,19 +52,17 @@ impl Machine {
         let mut bg_color = Rgb::from(75.0, 75.0, 75.0);
         let mut fg_color = Rgb::from(0.0, 0.0, 0.0);
 
-        if !debug {
-            let rom_dt = Utils::find_rom(filename.to_str().unwrap())?;
+        let rom = Utils::find_rom(filename.to_str().unwrap())?;
 
-            if let Some(background_color) = rom_dt.options.background_color {
-                if let Ok(bg_result) = Rgb::from_hex_str(&unescape(&background_color)?) {
-                    bg_color = bg_result;
-                }
+        if let Some(background_color) = rom.options.background_color {
+            if let Ok(bg_result) = Rgb::from_hex_str(&unescape(&background_color)?) {
+                bg_color = bg_result;
             }
+        }
 
-            if let Some(foreground_color) = rom_dt.options.fill_color {
-                if let Ok(fg_result) = Rgb::from_hex_str(&unescape(&foreground_color)?) {
-                    fg_color = fg_result;
-                }
+        if let Some(foreground_color) = rom.options.fill_color {
+            if let Ok(fg_result) = Rgb::from_hex_str(&unescape(&foreground_color)?) {
+                fg_color = fg_result;
             }
         }
 
@@ -102,21 +84,6 @@ impl Machine {
                 audio.pause();
             }
         }
-
-        Ok(())
-    }
-
-    pub fn debug_load_rom(&mut self, rom: &Path) -> Result<()> {
-        let video_subsystem = self.sdl_context.video()?;
-        let window = video_subsystem
-            .window("CHIP-8", DISPLAY_WIDTH, DISPLAY_HEIGHT)
-            .allow_highdpi()
-            .position_centered()
-            .build()?;
-
-        let event_pump = self.sdl_context.event_pump()?;
-
-        self.start(window, event_pump, rom, true)?;
 
         Ok(())
     }
