@@ -327,7 +327,7 @@ impl Cpu {
         let vx = self.v[x] as u16;
         let vy = self.v[y] as u16;
         let result = vx + vy;
-        self.v[x] = result as u8;
+        self.v[x] = (result & 0xFF) as u8;
         self.v[0xF] = if result > 0xFF { 1 } else { 0 };
 
         Operation::Next
@@ -529,7 +529,7 @@ impl Cpu {
     /// Store registers V0 through Vx in memory starting at location I.
     /// The interpreter copies the values of registers V0 through Vx into memory, starting at the address in I.
     fn op_fx55(&mut self, x: usize) -> Operation {
-        for i in 0..x + 1 {
+        for i in 0..=x {
             self.ram[self.i + i] = self.v[i];
         }
 
@@ -541,7 +541,7 @@ impl Cpu {
     /// Read registers V0 through Vx from memory starting at location I.
     /// The interpreter reads values from memory starting at location I into registers V0 through Vx.
     fn op_fx65(&mut self, x: usize) -> Operation {
-        for i in 0..x + 1 {
+        for i in 0..=x {
             self.v[i] = self.ram[self.i + i];
         }
 

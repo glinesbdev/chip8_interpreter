@@ -11,17 +11,12 @@ pub struct RomOptions {
 impl RomOptions {
     fn parse_tickrate(value: &Value) -> u8 {
         let value = value.to_string();
-        let mut result = 0;
-
-        if value.is_empty() {
-            return result;
-        }
 
         if let Ok(value) = value.parse::<u8>() {
-            result = value;
+            return value;
         }
 
-        result
+        0
     }
 }
 
